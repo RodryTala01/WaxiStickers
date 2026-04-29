@@ -292,8 +292,8 @@ function seedConfig_() {
   sheet.getRange(2, 1, 4, 2).setValues([
     ["whatsappNumber", "+54 1154865284"],
     ["whatsappLabel", "+54 11 5486-5284"],
-    ["instagramUser", "@stickerstudio"],
-    ["instagramUrl", "https://www.instagram.com/stickerstudio/"]
+    ["instagramUser", "@waxistickerslanus"],
+    ["instagramUrl", "https://www.instagram.com/waxistickerslanus/"]
   ]);
 }
 

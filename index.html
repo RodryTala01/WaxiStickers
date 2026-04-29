@@ -5,23 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta
     name="description"
-    content="Catálogo visual para vender por WhatsApp con carrito, favoritos y pedido listo para registrar en Google Sheets."
+    content="Catálogo visual de WAXI STICKERS LANÚS para comprar stickers, imanes y personalizados por WhatsApp."
   >
-  <title>Sticker Studio | Catálogo por WhatsApp</title>
+  <title>Waxi Stickers Lanús</title>
+  <link rel="icon" type="image/png" href="assets/favicon.png">
+  <link rel="apple-touch-icon" href="assets/favicon.png">
   <link rel="stylesheet" href="catalogo.css">
 </head>
 <body data-page="inicio">
   <div class="page-ambient" aria-hidden="true"></div>
 
   <header class="hero" id="inicio">
-    <div class="hero__topbar shell">
-      <a class="brand" href="index.html" aria-label="Ir al inicio de Sticker Studio">
-        <span class="brand__mark">S</span>
-        <span class="brand__copy">
-          <strong>Sticker Studio</strong>
-          <small>Catálogo listo para pedidos por WhatsApp</small>
-        </span>
+    <div class="brand-banner shell">
+      <a href="index.html" aria-label="Ir al inicio de WAXI STICKERS LANÚS">
+        <img
+          src="assets/waxi-banner.png"
+          alt="WAXI Stickers"
+          width="3240"
+          height="1350"
+          fetchpriority="high"
+          style="display:block;width:100%;height:clamp(8rem,28vw,11rem);object-fit:contain;object-position:center;"
+        >
       </a>
+    </div>
+
+    <div class="hero__topbar shell">
+      <button class="ghost-button topbar-favorites" id="topbarFavoritesButton" type="button" aria-pressed="false">
+        Ver favoritos
+      </button>
 
       <nav class="site-nav" aria-label="Navegación principal">
         <a href="index.html" data-route-link="inicio">Inicio</a>
@@ -41,12 +52,21 @@
 
     <div class="hero__content shell">
       <section class="hero__copy">
-        <div class="hero__sale-tag">Desde $250</div>
         <p class="eyebrow">Tienda por WhatsApp</p>
-        <h1>Elegí tus stickers y armá el pedido.</h1>
+        <h1>WAXI STICKERS LANÚS</h1>
+        <p class="hero__headline">Elegí tus stickers y armá el pedido.</p>
         <p class="hero__text">
-          Mirá el catálogo, sumá productos al carrito y enviá todo por WhatsApp sin pago online.
+          Catálogo listo para pedir por WhatsApp, sin pago online.
         </p>
+
+        <div class="hero__actions">
+          <button class="primary-button" type="button" data-route-button="stickers">
+            Comprar stickers
+          </button>
+          <button class="secondary-button" type="button" id="heroCartButtonSecondary">
+            Ver carrito
+          </button>
+        </div>
 
         <div class="hero__shop-actions" aria-label="Accesos rápidos">
           <button class="hero-category hero-category--main" type="button" data-route-button="stickers">
@@ -66,23 +86,14 @@
           </button>
         </div>
 
-        <div class="hero__actions">
-          <button class="primary-button" type="button" data-route-button="stickers">
-            Ir al catálogo
-          </button>
-          <button class="secondary-button" type="button" id="heroCartButtonSecondary">
-            Ver carrito
-          </button>
-        </div>
-
         <ul class="hero__stats" aria-label="Datos de compra">
+          <li>
+            <strong>Desde $250</strong>
+            <span>Precio base sticker chico.</span>
+          </li>
           <li>
             <strong>3 tamaños</strong>
             <span>Chico, mediano y grande.</span>
-          </li>
-          <li>
-            <strong>Laminado opcional</strong>
-            <span>Elegís la terminación.</span>
           </li>
           <li>
             <strong>Por WhatsApp</strong>
@@ -190,7 +201,7 @@
 
   <footer class="contact-section" id="contacto" aria-labelledby="contactTitle">
     <div class="shell contact-section__layout">
-      <div>
+      <div class="contact-section__copy">
         <p class="eyebrow">Contacto</p>
         <h2 id="contactTitle">Hablemos de tu pedido</h2>
         <p>Consultas, pedidos especiales, entregas para negocios y trabajos por cantidad.</p>

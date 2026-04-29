@@ -3,14 +3,15 @@
     cart: "catalogo-cart-v1",
     favorites: "catalogo-favorites-v1",
     customer: "catalogo-customer-v1",
-    orderCounter: "catalogo-order-counter-v1"
+    orderCounter: "catalogo-order-counter-v1",
+    pendingFavorites: "catalogo-pending-favorites-v1"
   };
 
   const STORE_CONFIG = {
     whatsappNumber: "+54 1154865284",
     whatsappLabel: "+54 11 5486-5284",
-    instagramUser: "@stickerstudio",
-    instagramUrl: "https://www.instagram.com/stickerstudio/",
+    instagramUser: "@waxistickerslanus",
+    instagramUrl: "https://www.instagram.com/waxistickerslanus/",
     currency: "ARS",
     locale: "es-AR",
     catalogPageSize: 24,
@@ -24,7 +25,7 @@
   const ROUTES = {
     inicio: {
       file: "index.html",
-      title: "Sticker Studio | Catálogo por WhatsApp",
+      title: "Waxi Stickers Lanús",
       mode: "catalog",
       eyebrow: "Catálogo",
       heading: "Catálogo de stickers",
@@ -32,7 +33,7 @@
     },
     stickers: {
       file: "stickers.html",
-      title: "Stickers | Sticker Studio",
+      title: "Waxi Stickers Lanús",
       mode: "catalog",
       productType: "sticker",
       eyebrow: "Stickers",
@@ -41,7 +42,7 @@
     },
     personalizados: {
       file: "personalizados.html",
-      title: "Personalizados | Sticker Studio",
+      title: "Waxi Stickers Lanús",
       mode: "info",
       category: "Personalizados",
       eyebrow: "Personalizados",
@@ -50,7 +51,7 @@
     },
     imanes: {
       file: "imanes.html",
-      title: "Imanes | Sticker Studio",
+      title: "Waxi Stickers Lanús",
       mode: "info",
       category: "Otros productos",
       subcategory: "Imanes",
@@ -60,7 +61,7 @@
     },
     otros: {
       file: "otros.html",
-      title: "Extras | Sticker Studio",
+      title: "Waxi Stickers Lanús",
       mode: "info",
       category: "Otros productos",
       eyebrow: "Extras",
@@ -69,7 +70,7 @@
     },
     contacto: {
       file: "contacto.html",
-      title: "Contacto | Sticker Studio",
+      title: "Waxi Stickers Lanús",
       mode: "contact"
     }
   };
@@ -262,8 +263,8 @@
     CONFIG: [
       { clave: "whatsappNumber", valor: "+54 1154865284" },
       { clave: "whatsappLabel", valor: "+54 11 5486-5284" },
-      { clave: "instagramUser", valor: "@stickerstudio" },
-      { clave: "instagramUrl", valor: "https://www.instagram.com/stickerstudio/" }
+      { clave: "instagramUser", valor: "@waxistickerslanus" },
+      { clave: "instagramUrl", valor: "https://www.instagram.com/waxistickerslanus/" }
     ]
   };
 
@@ -276,6 +277,7 @@
   const dom = {
     featuredProducts: document.getElementById("featuredProducts"),
     favoritesFilterButton: document.getElementById("favoritesFilterButton"),
+    topbarFavoritesButton: document.getElementById("topbarFavoritesButton"),
     routeLinks: document.querySelectorAll("[data-route-link]"),
     routeButtons: document.querySelectorAll("[data-route-button]"),
     catalogSection: document.getElementById("catalogo"),
@@ -393,10 +395,14 @@
     });
 
     dom.favoritesFilterButton.addEventListener("click", function () {
-      state.filters.favoritesOnly = !state.filters.favoritesOnly;
-      resetVisibleProductLimit();
-      renderCurrentView({ scroll: false });
+      toggleFavoritesView({ goToStickers: false });
     });
+
+    if (dom.topbarFavoritesButton) {
+      dom.topbarFavoritesButton.addEventListener("click", function () {
+        toggleFavoritesView({ goToStickers: true });
+      });
+    }
 
     if (dom.stickerSearchInput) {
       dom.stickerSearchInput.addEventListener("input", function () {
@@ -558,7 +564,7 @@
 
     if (state.isCatalogLoading) {
       dom.infoGrid.setAttribute("aria-busy", "true");
-      dom.infoGrid.innerHTML = renderCatalogLoadingState("Cargando opciones", "Estamos leyendo los productos desde Google Sheets.");
+      dom.infoGrid.innerHTML = renderCatalogLoadingState("Un segundo", "Estamos ordenando la información para que navegues cómodo.");
       return;
     }
 
@@ -570,7 +576,7 @@
           <span class="empty-state__badge">Sin productos</span>
           <div>
             <h3>Todavía no hay productos cargados en esta sección.</h3>
-            <p>Cuando los agregues en Google Sheets van a aparecer acá automáticamente.</p>
+            <p>Cuando agregues productos van a aparecer acá automáticamente.</p>
           </div>
         </article>
       `;
@@ -721,6 +727,7 @@
 
     dom.favoritesFilterButton.setAttribute("aria-pressed", String(state.filters.favoritesOnly));
     dom.favoritesFilterButton.textContent = state.filters.favoritesOnly ? "Viendo guardados" : "Ver guardados";
+    updateTopbarFavoritesButton();
 
     dom.categoryFilters.querySelectorAll("[data-category-filter]").forEach(function (button) {
       button.addEventListener("click", function () {
@@ -747,13 +754,38 @@
     }
   }
 
+  function toggleFavoritesView(options) {
+    const shouldGoToStickers = options && options.goToStickers;
+    state.filters.favoritesOnly = !state.filters.favoritesOnly;
+    resetVisibleProductLimit();
+
+    if (shouldGoToStickers && state.route !== "stickers") {
+      window.location.href = ROUTES.stickers.file;
+      return;
+    }
+
+    renderCurrentView({ scroll: false });
+    if (state.filters.favoritesOnly) {
+      showToast("Mostrando tus favoritos.");
+    }
+  }
+
+  function updateTopbarFavoritesButton() {
+    if (!dom.topbarFavoritesButton) {
+      return;
+    }
+
+    dom.topbarFavoritesButton.setAttribute("aria-pressed", String(state.filters.favoritesOnly));
+    dom.topbarFavoritesButton.textContent = state.filters.favoritesOnly ? "Viendo favoritos" : "Ver favoritos";
+    dom.topbarFavoritesButton.classList.toggle("is-active", state.filters.favoritesOnly);
+  }
+
   function renderCatalog() {
     const route = getCurrentRoute();
     dom.catalogGrid.setAttribute("aria-busy", String(state.isCatalogLoading));
 
     if (state.isCatalogLoading) {
-      const title = route.category === "Stickers" ? "Cargando stickers" : "Cargando catálogo";
-      dom.catalogGrid.innerHTML = renderCatalogLoadingState(title, "Estamos trayendo los productos desde Google Sheets.");
+      dom.catalogGrid.innerHTML = renderCatalogLoadingState("Un segundo", "Estamos ordenando los diseños para que navegues cómodo.");
       return;
     }
 
@@ -1414,7 +1446,7 @@
       renderContactLinks();
     } catch (error) {
       state.sheetsLoaded = false;
-      showToast("No pudimos leer Google Sheets. Se usa el catálogo local.");
+      showToast("No pudimos actualizar la lista. Te mostramos lo disponible.");
     } finally {
       state.isCatalogLoading = false;
     }
@@ -1739,14 +1771,23 @@
       <div class="page-ambient" aria-hidden="true"></div>
 
       <header class="hero" id="inicio">
-        <div class="hero__topbar shell">
-          <a class="brand" href="index.html" aria-label="Ir al inicio de Sticker Studio">
-            <span class="brand__mark">S</span>
-            <span class="brand__copy">
-              <strong>Sticker Studio</strong>
-              <small>Catálogo listo para pedidos por WhatsApp</small>
-            </span>
+        <div class="brand-banner shell">
+          <a href="index.html" aria-label="Ir al inicio de WAXI STICKERS LANÚS">
+            <img
+              src="assets/waxi-banner.png"
+              alt="WAXI Stickers"
+              width="3240"
+              height="1350"
+              fetchpriority="high"
+              style="display:block;width:100%;height:clamp(8rem,28vw,11rem);object-fit:contain;object-position:center;"
+            >
           </a>
+        </div>
+
+        <div class="hero__topbar shell">
+          <button class="ghost-button topbar-favorites" id="topbarFavoritesButton" type="button" aria-pressed="false">
+            Ver favoritos
+          </button>
 
           <nav class="site-nav" aria-label="Navegación principal">
             <a href="index.html" data-route-link="inicio">Inicio</a>
@@ -1766,12 +1807,21 @@
 
         <div class="hero__content shell">
           <section class="hero__copy">
-            <div class="hero__sale-tag">Desde $250</div>
             <p class="eyebrow">Tienda por WhatsApp</p>
-            <h1>Elegí tus stickers y armá el pedido.</h1>
+            <h1>WAXI STICKERS LANÚS</h1>
+            <p class="hero__headline">Elegí tus stickers y armá el pedido.</p>
             <p class="hero__text">
-              Mirá el catálogo, sumá productos al carrito y enviá todo por WhatsApp sin pago online.
+              Catálogo listo para pedir por WhatsApp, sin pago online.
             </p>
+
+            <div class="hero__actions">
+              <button class="primary-button" type="button" data-route-button="stickers">
+                Comprar stickers
+              </button>
+              <button class="secondary-button" type="button" id="heroCartButtonSecondary">
+                Ver carrito
+              </button>
+            </div>
 
             <div class="hero__shop-actions" aria-label="Accesos rápidos">
               <button class="hero-category hero-category--main" type="button" data-route-button="stickers">
@@ -1791,23 +1841,14 @@
               </button>
             </div>
 
-            <div class="hero__actions">
-              <button class="primary-button" type="button" data-route-button="stickers">
-                Ir al catálogo
-              </button>
-              <button class="secondary-button" type="button" id="heroCartButtonSecondary">
-                Ver carrito
-              </button>
-            </div>
-
             <ul class="hero__stats" aria-label="Datos de compra">
+              <li>
+                <strong>Desde $250</strong>
+                <span>Precio base sticker chico.</span>
+              </li>
               <li>
                 <strong>3 tamaños</strong>
                 <span>Chico, mediano y grande.</span>
-              </li>
-              <li>
-                <strong>Laminado opcional</strong>
-                <span>Elegís la terminación.</span>
               </li>
               <li>
                 <strong>Por WhatsApp</strong>
@@ -1914,7 +1955,7 @@
 
       <footer class="contact-section" id="contacto" aria-labelledby="contactTitle">
         <div class="shell contact-section__layout">
-          <div>
+          <div class="contact-section__copy">
             <p class="eyebrow">Contacto</p>
             <h2 id="contactTitle">Hablemos de tu pedido</h2>
             <p>Consultas, pedidos especiales, entregas para negocios y trabajos por cantidad.</p>
