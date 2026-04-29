@@ -23,7 +23,7 @@
 
   const ROUTES = {
     inicio: {
-      file: "catalogo.html",
+      file: "index.html",
       title: "Sticker Studio | Catálogo por WhatsApp",
       mode: "catalog",
       eyebrow: "Catálogo",
@@ -1740,7 +1740,7 @@
 
       <header class="hero" id="inicio">
         <div class="hero__topbar shell">
-          <a class="brand" href="catalogo.html" aria-label="Ir al inicio de Sticker Studio">
+          <a class="brand" href="index.html" aria-label="Ir al inicio de Sticker Studio">
             <span class="brand__mark">S</span>
             <span class="brand__copy">
               <strong>Sticker Studio</strong>
@@ -1749,7 +1749,7 @@
           </a>
 
           <nav class="site-nav" aria-label="Navegación principal">
-            <a href="catalogo.html" data-route-link="inicio">Inicio</a>
+            <a href="index.html" data-route-link="inicio">Inicio</a>
             <a href="stickers.html" data-route-link="stickers">Stickers</a>
             <a href="personalizados.html" data-route-link="personalizados">Personalizados</a>
             <a href="imanes.html" data-route-link="imanes">Imanes</a>
@@ -2139,7 +2139,7 @@
       return bodyPage;
     }
 
-    const fileName = window.location.pathname.split("/").pop() || "catalogo.html";
+    const fileName = window.location.pathname.split("/").pop() || "index.html";
     const matchingRoute = Object.keys(ROUTES).find(function (routeName) {
       return ROUTES[routeName].file === fileName;
     });
