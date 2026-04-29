@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta
+    name="description"
+    content="Catálogo visual para vender por WhatsApp con carrito, favoritos y pedido listo para registrar en Google Sheets."
+  >
+  <title>Sticker Studio | Catálogo por WhatsApp</title>
+  <link rel="stylesheet" href="catalogo.css">
+</head>
+<body data-page="inicio">
+  <div class="page-ambient" aria-hidden="true"></div>
+
+  <header class="hero" id="inicio">
+    <div class="hero__topbar shell">
+      <a class="brand" href="catalogo.html" aria-label="Ir al inicio de Sticker Studio">
+        <span class="brand__mark">S</span>
+        <span class="brand__copy">
+          <strong>Sticker Studio</strong>
+          <small>Catálogo listo para pedidos por WhatsApp</small>
+        </span>
+      </a>
+
+      <nav class="site-nav" aria-label="Navegación principal">
+        <a href="catalogo.html" data-route-link="inicio">Inicio</a>
+        <a href="stickers.html" data-route-link="stickers">Stickers</a>
+        <a href="personalizados.html" data-route-link="personalizados">Personalizados</a>
+        <a href="imanes.html" data-route-link="imanes">Imanes</a>
+        <a href="otros.html" data-route-link="otros">Extras</a>
+        <a href="contacto.html" data-route-link="contacto">Contacto</a>
+      </nav>
+
+      <div class="topbar-actions">
+        <button class="ghost-button hero__cart-shortcut" id="heroCartButton" type="button">
+          Ver carrito
+        </button>
+      </div>
+    </div>
+
+    <div class="hero__content shell">
+      <section class="hero__copy">
+        <div class="hero__sale-tag">Desde $250</div>
+        <p class="eyebrow">Tienda por WhatsApp</p>
+        <h1>Elegí tus stickers y armá el pedido.</h1>
+        <p class="hero__text">
+          Mirá el catálogo, sumá productos al carrito y enviá todo por WhatsApp sin pago online.
+        </p>
+
+        <div class="hero__shop-actions" aria-label="Accesos rápidos">
+          <button class="hero-category hero-category--main" type="button" data-route-button="stickers">
+            <span>Comprar ahora</span>
+            <strong>Stickers</strong>
+            <small>Ver catálogo completo</small>
+          </button>
+          <button class="hero-category" type="button" data-route-button="personalizados">
+            <span>A pedido</span>
+            <strong>Personalizados</strong>
+            <small>Fotos, logos e ideas</small>
+          </button>
+          <button class="hero-category" type="button" data-route-button="imanes">
+            <span>También</span>
+            <strong>Imanes</strong>
+            <small>Regalos y delivery</small>
+          </button>
+        </div>
+
+        <div class="hero__actions">
+          <button class="primary-button" type="button" data-route-button="stickers">
+            Ir al catálogo
+          </button>
+          <button class="secondary-button" type="button" id="heroCartButtonSecondary">
+            Ver carrito
+          </button>
+        </div>
+
+        <ul class="hero__stats" aria-label="Datos de compra">
+          <li>
+            <strong>3 tamaños</strong>
+            <span>Chico, mediano y grande.</span>
+          </li>
+          <li>
+            <strong>Laminado opcional</strong>
+            <span>Elegís la terminación.</span>
+          </li>
+          <li>
+            <strong>Por WhatsApp</strong>
+            <span>Coordinas el pago y la entrega.</span>
+          </li>
+        </ul>
+      </section>
+
+      <aside class="hero__panel" aria-labelledby="heroPanelTitle">
+        <div class="hero-card">
+          <div class="hero-card__header">
+            <div>
+              <p class="eyebrow">Vidriera</p>
+              <h2 id="heroPanelTitle">Lo más pedido</h2>
+            </div>
+            <span class="hero-card__badge">Catálogo</span>
+          </div>
+
+          <div class="hero-card__list" id="featuredProducts"></div>
+
+          <div class="hero-card__footer">
+            <span>Los productos se agregan al carrito y el pedido sale listo para WhatsApp.</span>
+            <strong>Sin pago online. Te respondemos por mensaje.</strong>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </header>
+
+  <main class="main-content">
+    <section class="catalog-section shell" id="catalogo" aria-labelledby="catalogTitle" data-view-panel="catalog">
+      <div class="section-head">
+        <div>
+          <p class="eyebrow" id="catalogEyebrow">Catálogo</p>
+          <h2 id="catalogTitle">Catálogo de stickers</h2>
+          <p class="section-head__text" id="catalogIntro">
+            Buscá por categoría, abrí el producto y elegí la variante antes de agregar al carrito.
+          </p>
+        </div>
+
+        <button class="ghost-button" id="favoritesFilterButton" type="button" aria-pressed="false">
+          Ver guardados
+        </button>
+      </div>
+
+      <div class="filter-panel">
+        <div class="filter-block filter-block--wide is-hidden" id="stickerSearchBlock" hidden>
+          <label class="filter-block__label" for="stickerSearchInput">Buscar sticker</label>
+          <input
+            class="catalog-search"
+            id="stickerSearchInput"
+            type="search"
+            placeholder="Ej: Soda Stereo, logo, mascota..."
+            autocomplete="off"
+          >
+        </div>
+
+        <div class="filter-block filter-block--wide is-hidden" id="catalogSortBlock" hidden>
+          <span class="filter-block__label">Ordenar</span>
+          <div class="filter-pills" id="catalogSortOptions"></div>
+        </div>
+
+        <div class="filter-block" id="categoryFilterBlock">
+          <span class="filter-block__label">Categoría</span>
+          <div class="filter-pills" id="categoryFilters"></div>
+        </div>
+
+        <div class="filter-block">
+          <span class="filter-block__label">Subcategoría</span>
+          <div class="filter-pills" id="subcategoryFilters"></div>
+        </div>
+      </div>
+
+      <div class="catalog-grid" id="catalogGrid" aria-live="polite"></div>
+    </section>
+
+    <section class="info-section shell is-hidden" id="infoSection" aria-labelledby="infoTitle" data-view-panel="info">
+      <div class="section-head section-head--stacked">
+        <div>
+          <p class="eyebrow" id="infoEyebrow">Productos</p>
+          <h2 id="infoTitle">Opciones, precios y formatos</h2>
+          <p class="section-head__text" id="infoIntro">
+            Elegí una opción para ver detalles y sumarla al carrito.
+          </p>
+        </div>
+      </div>
+      <div class="info-grid" id="infoGrid"></div>
+    </section>
+
+    <section class="trust-strip shell" id="trustStrip" aria-label="Beneficios del sistema">
+      <article class="trust-card">
+        <p class="eyebrow">1</p>
+        <h3>Elegís productos y variantes.</h3>
+      </article>
+      <article class="trust-card">
+        <p class="eyebrow">2</p>
+        <h3>Revisás el total en el carrito.</h3>
+      </article>
+      <article class="trust-card">
+        <p class="eyebrow">3</p>
+        <h3>Enviás el pedido por WhatsApp.</h3>
+      </article>
+    </section>
+  </main>
+
+  <footer class="contact-section" id="contacto" aria-labelledby="contactTitle">
+    <div class="shell contact-section__layout">
+      <div>
+        <p class="eyebrow">Contacto</p>
+        <h2 id="contactTitle">Hablemos de tu pedido</h2>
+        <p>Consultas, pedidos especiales, entregas para negocios y trabajos por cantidad.</p>
+      </div>
+      <div class="contact-actions">
+        <a class="primary-button" id="contactWhatsapp" href="#" target="_blank" rel="noreferrer">
+          WhatsApp
+        </a>
+        <a class="secondary-button" id="contactInstagram" href="#" target="_blank" rel="noreferrer">
+          Instagram
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <button class="cart-fab" id="cartFab" type="button" aria-label="Abrir carrito">
+    <span class="cart-fab__icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="9" cy="20" r="1.5"></circle>
+        <circle cx="18" cy="20" r="1.5"></circle>
+        <path d="M3 4h2.4l2.3 10.2a1 1 0 0 0 1 .8h9.6a1 1 0 0 0 1-.8L21 7H7.1"></path>
+      </svg>
+    </span>
+    <span class="cart-fab__copy">
+      <strong>Carrito</strong>
+      <small id="cartFabTotalLabel">0 productos</small>
+    </span>
+    <span class="cart-fab__count" id="cartCount">0</span>
+  </button>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <div class="overlay" id="productOverlay" aria-hidden="true">
+    <div class="modal product-modal" role="dialog" aria-modal="true" aria-labelledby="productTitle">
+      <button class="modal__close" type="button" data-close-overlay="productOverlay" aria-label="Cerrar producto">
+        <span aria-hidden="true">&times;</span>
+      </button>
+
+      <div class="product-modal__layout">
+        <section class="gallery-panel">
+          <div class="gallery-panel__hero">
+            <img id="productMainImage" src="" alt="">
+          </div>
+          <div class="gallery-panel__thumbs" id="productThumbs"></div>
+        </section>
+
+        <section class="product-detail">
+          <div class="product-detail__badges" id="productBadges"></div>
+          <h3 id="productTitle">Producto</h3>
+          <p class="product-detail__description" id="productDescription"></p>
+
+          <div class="price-card">
+            <span class="price-card__label">Precio de esta combinación</span>
+            <strong id="productDynamicPrice">$0</strong>
+            <small id="productPriceHint">Desde $0</small>
+          </div>
+
+          <div class="selector-group" id="sizeSelectorGroup">
+            <div class="selector-group__head">
+              <span>Tamaño</span>
+              <small id="sizeSelectorHint">Base activa: Chico</small>
+            </div>
+            <div class="selector-group__options" id="sizeSelectorOptions"></div>
+          </div>
+
+          <div class="selector-group" id="laminateSelectorGroup">
+            <div class="selector-group__head">
+              <span>Laminado</span>
+              <small>Acabado final del producto</small>
+            </div>
+            <div class="selector-group__options" id="laminateSelectorOptions"></div>
+          </div>
+
+          <div class="product-detail__actions">
+            <button class="ghost-button product-detail__favorite" id="productFavoriteButton" type="button">
+              Guardar favorito
+            </button>
+            <button class="primary-button product-detail__add" id="addToCartButton" type="button">
+              Agregar al carrito
+            </button>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <div class="overlay overlay--drawer" id="cartOverlay" aria-hidden="true">
+    <aside class="drawer" role="dialog" aria-modal="true" aria-labelledby="cartTitle">
+      <div class="drawer__header">
+        <div>
+          <p class="eyebrow">Carrito</p>
+          <h2 id="cartTitle">Tu pedido</h2>
+        </div>
+        <button class="modal__close" type="button" data-close-overlay="cartOverlay" aria-label="Cerrar carrito">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="drawer__body" id="cartItems"></div>
+
+      <div class="drawer__footer">
+        <div class="drawer__summary">
+          <span>Total</span>
+          <strong id="cartTotal">$0</strong>
+        </div>
+        <p class="drawer__note">
+          El pedido se genera sin pagos en línea y queda listo para enviar por WhatsApp.
+        </p>
+        <button class="primary-button drawer__checkout" id="checkoutButton" type="button">
+          Confirmar datos del pedido
+        </button>
+      </div>
+    </aside>
+  </div>
+
+  <div class="overlay" id="checkoutOverlay" aria-hidden="true">
+    <div class="modal checkout-modal" role="dialog" aria-modal="true" aria-labelledby="checkoutTitle">
+      <button class="modal__close" type="button" data-close-overlay="checkoutOverlay" aria-label="Cerrar confirmación">
+        <span aria-hidden="true">&times;</span>
+      </button>
+
+      <div class="checkout-modal__layout">
+        <section class="checkout-panel">
+          <p class="eyebrow">Confirmación</p>
+          <h2 id="checkoutTitle">Confirma tus datos antes de enviar el pedido</h2>
+          <p class="checkout-panel__text">
+            Terminás de confirmar los datos, se abre WhatsApp con el mensaje armado y el pedido queda listo para registrarse.
+          </p>
+
+          <form id="checkoutForm" novalidate>
+            <label class="field">
+              <span>Nombre</span>
+              <input id="customerName" name="name" type="text" placeholder="Ej: Rocío Díaz" required>
+            </label>
+
+            <label class="field">
+              <span>WhatsApp</span>
+              <input
+                id="customerWhatsapp"
+                name="whatsapp"
+                type="tel"
+                inputmode="tel"
+                placeholder="Ej: 5491123456789"
+                required
+              >
+            </label>
+
+            <label class="field">
+              <span>Email</span>
+              <input id="customerEmail" name="email" type="email" placeholder="Ej: hola@marca.com" required>
+            </label>
+
+            <div class="checkout-actions">
+              <button class="ghost-button" id="checkoutBackButton" type="button">
+                Volver al carrito
+              </button>
+              <button class="primary-button" id="sendOrderButton" type="submit">
+                Enviar por WhatsApp
+              </button>
+            </div>
+          </form>
+        </section>
+
+        <aside class="ticket" aria-labelledby="ticketTitle">
+          <div class="ticket__header">
+            <div>
+              <p class="eyebrow">Resumen</p>
+              <h3 id="ticketTitle">Comprobante del pedido</h3>
+            </div>
+            <strong class="ticket__id" id="ticketOrderId">#S1</strong>
+          </div>
+
+          <div class="ticket__meta">
+            <span id="ticketDate"></span>
+            <span id="ticketItemsCount">0 productos</span>
+          </div>
+
+          <div class="ticket__items" id="ticketItems"></div>
+
+          <div class="ticket__footer">
+            <span>Total</span>
+            <strong id="ticketTotal">$0</strong>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+
+  <script src="catalogo.js"></script>
+</body>
+</html>
