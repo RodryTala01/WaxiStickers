@@ -14,11 +14,11 @@
     instagramUrl: "https://www.instagram.com/waxistickerslanus/",
     currency: "ARS",
     locale: "es-AR",
-    catalogPageSize: 24,
+    catalogPageSize: 48,
     googleSheets: {
       enabled: true,
       appsScriptUrl: "https://script.google.com/macros/s/AKfycbygcdj5HBaDU0C2vmkaM0biFw9JAvhAXhhOhJ4S979Ebr0dO3a-nYRUtzh2kcoorGpD0A/exec",
-      sheetNames: ["PRODUCTOS", "PRECIOS", "PEDIDOS", "CONFIG"]
+      sheetNames: ["PRODUCTOS", "PRECIOS", "PROMOS", "PEDIDOS", "CONFIG"]
     }
   };
 
@@ -256,8 +256,35 @@
       { grupo: "sticker", item: "tamano", clave: "7x7", etiqueta: "Grande", detalle: "7 x 7 cm", valor: 1800, orden: 3 },
       { grupo: "sticker", item: "laminado", clave: "no", etiqueta: "No Laminado", detalle: "Terminación estándar", valor: 0, orden: 1 },
       { grupo: "sticker", item: "laminado", clave: "si", etiqueta: "Laminado", detalle: "Protección extra", valor: 450, orden: 2 },
+      { grupo: "sticker", item: "combo", clave: "3x3-no", etiqueta: "Chico sin laminado", detalle: "3 x 3 cm, no laminado", valor: 250, orden: 1 },
+      { grupo: "sticker", item: "combo", clave: "3x3-si", etiqueta: "Chico laminado", detalle: "3 x 3 cm, laminado", valor: 700, orden: 2 },
+      { grupo: "sticker", item: "combo", clave: "5x5-no", etiqueta: "Mediano sin laminado", detalle: "5 x 5 cm, no laminado", valor: 1150, orden: 3 },
+      { grupo: "sticker", item: "combo", clave: "5x5-si", etiqueta: "Mediano laminado", detalle: "5 x 5 cm, laminado", valor: 1600, orden: 4 },
+      { grupo: "sticker", item: "combo", clave: "7x7-no", etiqueta: "Grande sin laminado", detalle: "7 x 7 cm, no laminado", valor: 2050, orden: 5 },
+      { grupo: "sticker", item: "combo", clave: "7x7-si", etiqueta: "Grande laminado", detalle: "7 x 7 cm, laminado", valor: 2500, orden: 6 },
       { grupo: "iman-polaroid", item: "base", clave: "unico", etiqueta: "Tamaño único", valor: 3600, orden: 1 },
-      { grupo: "tarjeta-mini-thanks", item: "base", clave: "unico", etiqueta: "Paquete base", valor: 2100, orden: 1 }
+      { grupo: "tarjeta-mini-thanks", item: "base", clave: "unico", etiqueta: "Paquete base", valor: 2100, orden: 1 },
+      { grupo: "imanes", item: "base", clave: "unico", etiqueta: "Imanes", detalle: "Precio general de imanes", valor: 3600, orden: 10 },
+      { grupo: "senaladores", item: "base", clave: "unico", etiqueta: "Señaladores", detalle: "Precio general de señaladores", valor: 0, orden: 11 },
+      { grupo: "encendedores", item: "base", clave: "unico", etiqueta: "Encendedores", detalle: "Precio general de encendedores", valor: 0, orden: 12 },
+      { grupo: "tarjetas", item: "base", clave: "unico", etiqueta: "Tarjetas", detalle: "Precio general de tarjetas", valor: 2100, orden: 13 },
+      { grupo: "personalizados", item: "base", clave: "unico", etiqueta: "Personalizados", detalle: "Precio general de personalizados", valor: 0, orden: 14 },
+      { grupo: "extras", item: "base", clave: "unico", etiqueta: "Extras", detalle: "Precio general de extras", valor: 0, orden: 15 }
+    ],
+    PROMOS: [
+      {
+        id: "promo-mediano-sin-laminar",
+        titulo: "Promo mediano sin laminar",
+        descripcion: "3 stickers medianos sin laminar",
+        detalle: "Podés combinar diseños medianos no laminados y el total se ajusta solo en el carrito.",
+        tipoProducto: "sticker",
+        tamano: "5x5",
+        laminado: "no",
+        cantidad: 3,
+        precio: 1000,
+        activo: true,
+        orden: 1
+      }
     ],
     PEDIDOS: [],
     CONFIG: [
@@ -271,6 +298,7 @@
   let sheetsSource = cloneSheetsSource(SHEETS_SOURCE);
   let priceIndex = buildPriceIndex(sheetsSource.PRECIOS);
   let products = buildActiveProducts(sheetsSource.PRODUCTOS);
+  let promotions = buildActivePromotions(sheetsSource.PROMOS);
 
   ensurePageShell();
 
@@ -291,6 +319,7 @@
     stickerSearchInput: document.getElementById("stickerSearchInput"),
     catalogSortBlock: document.getElementById("catalogSortBlock"),
     catalogSortOptions: document.getElementById("catalogSortOptions"),
+    promoStrip: document.getElementById("promoStrip"),
     catalogGrid: document.getElementById("catalogGrid"),
     infoSection: document.getElementById("infoSection"),
     infoEyebrow: document.getElementById("infoEyebrow"),
@@ -340,14 +369,16 @@
     ticketTotal: document.getElementById("ticketTotal")
   };
 
+  const initialRoute = getRouteFromHash();
+
   const state = {
-    route: getRouteFromHash(),
+    route: initialRoute,
     filters: {
       category: "",
       subcategory: "",
       searchTerm: "",
       sortOrder: "default",
-      favoritesOnly: false
+      favoritesOnly: consumePendingFavoritesFilter(initialRoute)
     },
     favorites: new Set(loadJson(STORAGE_KEYS.favorites, [])),
     cart: loadJson(STORAGE_KEYS.cart, []),
@@ -408,6 +439,18 @@
       dom.stickerSearchInput.addEventListener("input", function () {
         state.filters.searchTerm = dom.stickerSearchInput.value.trim();
         resetVisibleProductLimit();
+        renderCatalog();
+      });
+    }
+
+    if (dom.catalogGrid) {
+      dom.catalogGrid.addEventListener("click", function (event) {
+        const loadMoreButton = event.target.closest("[data-load-more-products]");
+        if (!loadMoreButton) {
+          return;
+        }
+
+        state.visibleProductLimit += STORE_CONFIG.catalogPageSize;
         renderCatalog();
       });
     }
@@ -523,7 +566,10 @@
 
     if (route.mode === "catalog") {
       renderFilters();
+      renderPromoStrip(route);
       renderCatalog();
+    } else {
+      renderPromoStrip(null);
     }
 
     if (route.mode === "info") {
@@ -564,7 +610,7 @@
 
     if (state.isCatalogLoading) {
       dom.infoGrid.setAttribute("aria-busy", "true");
-      dom.infoGrid.innerHTML = renderCatalogLoadingState("Un segundo", "Estamos ordenando la información para que navegues cómodo.");
+      dom.infoGrid.innerHTML = renderCatalogLoadingState("Cargando el catálogo...", "");
       return;
     }
 
@@ -642,8 +688,19 @@
 
   function renderFeaturedProducts() {
     let featured = products.filter(function (product) {
-      return product.destacado;
+      return product.ventas > 0;
+    }).sort(function (a, b) {
+      if (a.ventas !== b.ventas) {
+        return b.ventas - a.ventas;
+      }
+      return sortProducts(a, b);
     }).slice(0, 3);
+
+    if (!featured.length) {
+      featured = products.filter(function (product) {
+        return product.destacado;
+      }).slice(0, 3);
+    }
 
     if (!featured.length) {
       featured = products.slice(0, 3);
@@ -666,6 +723,60 @@
         openProduct(button.dataset.openProduct || "");
       });
     });
+  }
+
+  function renderPromoStrip(route) {
+    if (!dom.promoStrip) {
+      return;
+    }
+
+    const activePromos = getPromotionsForRoute(route);
+    dom.promoStrip.classList.toggle("is-hidden", !activePromos.length);
+
+    if (!activePromos.length) {
+      dom.promoStrip.innerHTML = "";
+      return;
+    }
+
+    dom.promoStrip.innerHTML = activePromos.map(function (promo) {
+      return `
+        <article class="promo-card">
+          <span class="promo-card__eyebrow">Promo activa</span>
+          <div>
+            <strong>${promo.descripcion || promo.titulo}</strong>
+            <p>${promo.detalle || buildPromotionDetail(promo)}</p>
+          </div>
+          <span class="promo-card__price">${formatCurrency(promo.precio)}</span>
+        </article>
+      `;
+    }).join("");
+  }
+
+  function getPromotionsForRoute(route) {
+    if (!route || !shouldShowStickerTools(route)) {
+      return [];
+    }
+
+    return promotions.filter(function (promo) {
+      return productTypeMatches(promo.tipoProducto, "sticker");
+    });
+  }
+
+  function buildPromotionDetail(promo) {
+    const quantity = promo.cantidad || 1;
+    const sizeLabel = promo.tamano === "5x5" ? "medianos" : "de la promo";
+    const laminateLabel = promo.laminado === "no" ? "sin laminar" : "laminados";
+    return quantity + " stickers " + sizeLabel + " " + laminateLabel + " por " + formatCurrency(promo.precio) + ".";
+  }
+
+  function itemMatchesPromotion(item, promo) {
+    if (!productTypeMatches(promo.tipoProducto, "sticker")) {
+      return false;
+    }
+
+    const sizeMatch = !promo.tamano || item.tamano === promo.tamano;
+    const laminateMatch = !promo.laminado || item.laminado === promo.laminado;
+    return sizeMatch && laminateMatch;
   }
 
   function renderFilters() {
@@ -760,6 +871,7 @@
     resetVisibleProductLimit();
 
     if (shouldGoToStickers && state.route !== "stickers") {
+      rememberPendingFavoritesFilter(state.filters.favoritesOnly);
       window.location.href = ROUTES.stickers.file;
       return;
     }
@@ -776,7 +888,7 @@
     }
 
     dom.topbarFavoritesButton.setAttribute("aria-pressed", String(state.filters.favoritesOnly));
-    dom.topbarFavoritesButton.textContent = state.filters.favoritesOnly ? "Viendo favoritos" : "Ver favoritos";
+    dom.topbarFavoritesButton.textContent = "Guardados";
     dom.topbarFavoritesButton.classList.toggle("is-active", state.filters.favoritesOnly);
   }
 
@@ -785,7 +897,7 @@
     dom.catalogGrid.setAttribute("aria-busy", String(state.isCatalogLoading));
 
     if (state.isCatalogLoading) {
-      dom.catalogGrid.innerHTML = renderCatalogLoadingState("Un segundo", "Estamos ordenando los diseños para que navegues cómodo.");
+      dom.catalogGrid.innerHTML = renderCatalogLoadingState("Cargando el catálogo...", "");
       return;
     }
 
@@ -816,6 +928,7 @@
     const isFavorite = state.favorites.has(product.id);
     const priceLabel = getStartingPriceLabel(product);
     const showDescription = shouldShowProductDescription(product);
+    const highlightLabel = getProductHighlightLabel(product);
 
     return `
       <article class="product-card">
@@ -836,7 +949,7 @@
           <div class="product-badges">
             <span class="product-badge">${product.categoria}</span>
             <span class="product-badge">${product.subcategoria}</span>
-            ${product.destacado ? '<span class="product-badge product-badge--featured">Destacado</span>' : ""}
+            ${highlightLabel ? '<span class="product-badge product-badge--featured">' + highlightLabel + '</span>' : ""}
           </div>
 
           <div>
@@ -872,13 +985,6 @@
       });
     });
 
-    const loadMoreButton = dom.catalogGrid.querySelector("[data-load-more-products]");
-    if (loadMoreButton) {
-      loadMoreButton.addEventListener("click", function () {
-        state.visibleProductLimit += STORE_CONFIG.catalogPageSize;
-        renderCatalog();
-      });
-    }
   }
 
   function renderCatalogProgress(visibleCount, totalCount) {
@@ -900,8 +1006,8 @@
       <article class="catalog-loading" role="status">
         <div class="catalog-loading__spinner" aria-hidden="true"></div>
         <div>
-          <h3>${title}</h3>
-          <p>${message}</p>
+          ${title ? "<h3>" + title + "</h3>" : ""}
+          ${message ? "<p>" + message + "</p>" : ""}
         </div>
         <div class="catalog-loading__skeletons" aria-hidden="true">
           <span></span>
@@ -969,7 +1075,7 @@
     dom.productBadges.innerHTML = `
       <span class="product-badge">${product.categoria}</span>
       <span class="product-badge">${product.subcategoria}</span>
-      ${product.destacado ? '<span class="product-badge product-badge--featured">Destacado</span>' : ""}
+      ${getProductHighlightLabel(product) ? '<span class="product-badge product-badge--featured">' + getProductHighlightLabel(product) + '</span>' : ""}
     `;
     dom.productTitle.textContent = product.nombre;
     if (shouldShowProductDescription(product)) {
@@ -1054,13 +1160,11 @@
       return sum + item.cantidad;
     }, 0);
 
-    const cartTotal = state.cart.reduce(function (sum, item) {
-      return sum + item.precio * item.cantidad;
-    }, 0);
+    const cartSummary = calculateCartSummary(state.cart);
 
     dom.cartCount.textContent = String(totalItems);
     dom.cartFabTotalLabel.textContent = totalItems === 1 ? "1 producto" : totalItems + " productos";
-    dom.cartTotal.textContent = formatCurrency(cartTotal);
+    dom.cartTotal.textContent = formatCurrency(cartSummary.total);
     dom.checkoutButton.disabled = state.cart.length === 0;
 
     if (!state.cart.length) {
@@ -1098,7 +1202,7 @@
             </div>
           </article>
         `;
-      }).join("");
+      }).join("") + renderPromotionLines(cartSummary.promos, "cart");
     }
 
     dom.cartItems.querySelectorAll("[data-cart-action]").forEach(function (button) {
@@ -1114,9 +1218,7 @@
     const totalItems = state.cart.reduce(function (sum, item) {
       return sum + item.cantidad;
     }, 0);
-    const totalPrice = state.cart.reduce(function (sum, item) {
-      return sum + item.precio * item.cantidad;
-    }, 0);
+    const cartSummary = calculateCartSummary(state.cart);
 
     dom.ticketOrderId.textContent = state.checkoutPreviewId;
     dom.ticketDate.textContent = new Date().toLocaleDateString(STORE_CONFIG.locale, {
@@ -1125,7 +1227,7 @@
       year: "numeric"
     });
     dom.ticketItemsCount.textContent = totalItems === 1 ? "1 producto" : totalItems + " productos";
-    dom.ticketTotal.textContent = formatCurrency(totalPrice);
+    dom.ticketTotal.textContent = formatCurrency(cartSummary.total);
 
     if (!state.cart.length) {
       dom.ticketItems.innerHTML = `
@@ -1143,6 +1245,82 @@
           <strong>${item.nombre}</strong>
           <small>${item.tamanoLabel} | ${item.laminadoLabel}</small>
           <small>${item.cantidad} x ${formatCurrency(item.precio)} = ${formatCurrency(item.cantidad * item.precio)}</small>
+        </article>
+      `;
+    }).join("") + renderPromotionLines(cartSummary.promos, "ticket");
+  }
+
+  function calculateCartSummary(cartItems) {
+    const subtotal = cartItems.reduce(function (sum, item) {
+      return sum + item.precio * item.cantidad;
+    }, 0);
+    const promos = calculateAppliedPromotions(cartItems);
+    const discount = promos.reduce(function (sum, promo) {
+      return sum + promo.discount;
+    }, 0);
+
+    return {
+      subtotal: subtotal,
+      promos: promos,
+      discount: discount,
+      total: Math.max(0, subtotal - discount)
+    };
+  }
+
+  function calculateAppliedPromotions(cartItems) {
+    return promotions.map(function (promo) {
+      const matchingItems = cartItems.filter(function (item) {
+        return itemMatchesPromotion(item, promo);
+      });
+      const eligibleQuantity = matchingItems.reduce(function (sum, item) {
+        return sum + item.cantidad;
+      }, 0);
+      const promoSets = Math.floor(eligibleQuantity / promo.cantidad);
+      const regularUnitPrice = matchingItems[0] ? matchingItems[0].precio : 0;
+      const regularTotal = regularUnitPrice * promo.cantidad * promoSets;
+      const promoTotal = promo.precio * promoSets;
+      const discount = Math.max(0, regularTotal - promoTotal);
+
+      if (!promoSets || !discount) {
+        return null;
+      }
+
+      return {
+        id: promo.id,
+        title: promo.titulo,
+        description: promo.descripcion || buildPromotionDetail(promo),
+        sets: promoSets,
+        discount: discount,
+        promoTotal: promoTotal
+      };
+    }).filter(Boolean);
+  }
+
+  function renderPromotionLines(appliedPromos, variant) {
+    if (!appliedPromos.length) {
+      return "";
+    }
+
+    return appliedPromos.map(function (promo) {
+      if (variant === "ticket") {
+        return `
+          <article class="ticket-line ticket-line--promo">
+            <strong>${promo.description}</strong>
+            <small>Promo aplicada${promo.sets > 1 ? " x " + promo.sets : ""}: -${formatCurrency(promo.discount)}</small>
+          </article>
+        `;
+      }
+
+      return `
+        <article class="cart-line cart-line--promo">
+          <div class="cart-line__promo-icon" aria-hidden="true">%</div>
+          <div class="cart-line__meta">
+            <strong>${promo.description}</strong>
+            <span>Promo aplicada${promo.sets > 1 ? " x " + promo.sets : ""}</span>
+          </div>
+          <div class="cart-line__meta">
+            <strong>-${formatCurrency(promo.discount)}</strong>
+          </div>
         </article>
       `;
     }).join("");
@@ -1281,7 +1459,7 @@
     } finally {
       state.isSending = false;
       dom.sendOrderButton.disabled = false;
-      dom.sendOrderButton.textContent = "Enviar por WhatsApp";
+      dom.sendOrderButton.innerHTML = renderWhatsAppButtonLabel();
       updateTicketSummary();
     }
   }
@@ -1313,6 +1491,7 @@
 
   function buildOrder(orderId, customer) {
     const now = new Date();
+    const cartSummary = calculateCartSummary(state.cart);
     const items = state.cart.map(function (item) {
       return {
         productoId: item.productoId,
@@ -1327,10 +1506,6 @@
       };
     });
 
-    const total = items.reduce(function (sum, item) {
-      return sum + item.subtotal;
-    }, 0);
-
     return {
       id: orderId,
       fechaIso: now.toISOString(),
@@ -1340,7 +1515,10 @@
       }),
       cliente: customer,
       productos: items,
-      total: total
+      subtotal: cartSummary.subtotal,
+      promos: cartSummary.promos,
+      descuento: cartSummary.discount,
+      total: cartSummary.total
     };
   }
 
@@ -1361,6 +1539,16 @@
         item.nombre + " (" + item.tamano + " - " + item.laminado + ") x " + item.cantidad + " -> " + formatCurrency(item.subtotal)
       );
     });
+
+    if (order.promos.length) {
+      lines.push("");
+      lines.push("Promos:");
+      order.promos.forEach(function (promo) {
+        lines.push(promo.description + " -> -" + formatCurrency(promo.discount));
+      });
+      lines.push("");
+      lines.push("Subtotal: " + formatCurrency(order.subtotal));
+    }
 
     lines.push("");
     lines.push("Total: " + formatCurrency(order.total));
@@ -1407,6 +1595,11 @@
         id: order.id,
         fecha: order.fechaIso,
         cliente: order.cliente,
+        subtotal: order.subtotal,
+        descuento: order.descuento,
+        promociones: order.promos.map(function (promo) {
+          return promo.description;
+        }).join(" | "),
         total: order.total
       },
       rows: order.productos.map(function (item) {
@@ -1425,6 +1618,10 @@
           cantidad: item.cantidad,
           precioUnitario: item.precioUnitario,
           subtotal: item.subtotal,
+          promociones: order.promos.map(function (promo) {
+            return promo.description;
+          }).join(" | "),
+          descuentoPedido: order.descuento,
           totalPedido: order.total
         };
       })
@@ -1441,6 +1638,7 @@
       sheetsSource = normalizeSheetsSource(remoteSource);
       applyRemoteConfig(sheetsSource.CONFIG);
       priceIndex = buildPriceIndex(sheetsSource.PRECIOS);
+      promotions = buildActivePromotions(sheetsSource.PROMOS);
       products = buildActiveProducts(sheetsSource.PRODUCTOS);
       state.sheetsLoaded = true;
       renderContactLinks();
@@ -1565,6 +1763,16 @@
     return Boolean(product && product.tipoPrecio !== "sticker" && product.descripcion);
   }
 
+  function getProductHighlightLabel(product) {
+    if (!product) {
+      return "";
+    }
+    if (product.ventas > 0) {
+      return "Más vendido";
+    }
+    return product.destacado ? "Destacado" : "";
+  }
+
   function getProductPricingMeta(product) {
     if (product.tipoPrecio === "sticker") {
       const stickerPrices = priceIndex.sticker || {};
@@ -1618,8 +1826,10 @@
       const sizeOption = findOption(stickerPrices.tamanoList || [], selections.tamano, "3x3");
       const laminateOption = findOption(stickerPrices.laminadoList || [], selections.laminado, "no");
       const base = ((stickerPrices.base || {}).general) || 0;
+      const comboKey = sizeOption.clave + "-" + laminateOption.clave;
+      const comboPrice = (stickerPrices.combo || {})[comboKey];
       return {
-        unitPrice: base + sizeOption.valor + laminateOption.valor,
+        unitPrice: Number.isFinite(comboPrice) ? comboPrice : base + sizeOption.valor + laminateOption.valor,
         tamanoKey: sizeOption.clave,
         tamanoLabel: sizeOption.etiqueta,
         laminadoKey: laminateOption.clave,
@@ -1637,11 +1847,28 @@
   }
 
   function getFixedBasePrice(product) {
-    return (((priceIndex[product.id] || {}).base || {}).unico) || product.precioFijo || 0;
+    const priceGroups = [
+      product.id,
+      product.tipoPrecio,
+      product.subcategoria,
+      product.categoria
+    ].map(normalizePriceGroup).filter(Boolean);
+
+    for (let index = 0; index < priceGroups.length; index += 1) {
+      const basePrices = (priceIndex[priceGroups[index]] || {}).base || {};
+      if (Object.prototype.hasOwnProperty.call(basePrices, "unico")) {
+        return basePrices.unico;
+      }
+    }
+
+    return product.precioFijo || 0;
   }
 
   function getStartingPriceLabel(product) {
     const calculated = calculateProductPrice(product, buildDefaultSelections(product));
+    if (!calculated.unitPrice) {
+      return "Consultar precio";
+    }
     return "Desde " + formatCurrency(calculated.unitPrice);
   }
 
@@ -1779,14 +2006,14 @@
               width="3240"
               height="1350"
               fetchpriority="high"
-              style="display:block;width:100%;height:clamp(8rem,28vw,11rem);object-fit:contain;object-position:center;"
+              style="display:block;width:100%;height:100%;"
             >
           </a>
         </div>
 
         <div class="hero__topbar shell">
           <button class="ghost-button topbar-favorites" id="topbarFavoritesButton" type="button" aria-pressed="false">
-            Ver favoritos
+            Guardados
           </button>
 
           <nav class="site-nav" aria-label="Navegación principal">
@@ -1807,16 +2034,16 @@
 
         <div class="hero__content shell">
           <section class="hero__copy">
-            <p class="eyebrow">Tienda por WhatsApp</p>
+            <p class="eyebrow">Catálogo por WhatsApp</p>
             <h1>WAXI STICKERS LANÚS</h1>
-            <p class="hero__headline">Elegí tus stickers y armá el pedido.</p>
+            <p class="hero__headline">Elegí diseño, tamaño y laminado. El pedido se arma y se envía por Whatsapp.</p>
             <p class="hero__text">
-              Catálogo listo para pedir por WhatsApp, sin pago online.
+              Catálogo visual, promos activas, guardados y carrito para armar tu pedido en minutos.
             </p>
 
             <div class="hero__actions">
               <button class="primary-button" type="button" data-route-button="stickers">
-                Comprar stickers
+                Ver stickers
               </button>
               <button class="secondary-button" type="button" id="heroCartButtonSecondary">
                 Ver carrito
@@ -1825,17 +2052,17 @@
 
             <div class="hero__shop-actions" aria-label="Accesos rápidos">
               <button class="hero-category hero-category--main" type="button" data-route-button="stickers">
-                <span>Comprar ahora</span>
+                <span>Catálogo</span>
                 <strong>Stickers</strong>
-                <small>Ver catálogo completo</small>
+                <small>Diseños listos para elegir</small>
               </button>
               <button class="hero-category" type="button" data-route-button="personalizados">
-                <span>A pedido</span>
+                <span>A medida</span>
                 <strong>Personalizados</strong>
-                <small>Fotos, logos e ideas</small>
+                <small>Fotos, logos e ideas propias</small>
               </button>
               <button class="hero-category" type="button" data-route-button="imanes">
-                <span>También</span>
+                <span>Negocios</span>
                 <strong>Imanes</strong>
                 <small>Regalos y delivery</small>
               </button>
@@ -1847,12 +2074,12 @@
                 <span>Precio base sticker chico.</span>
               </li>
               <li>
-                <strong>3 tamaños</strong>
-                <span>Chico, mediano y grande.</span>
+                  <strong>Promo activa</strong>
+                  <span>3 medianos sin laminar.</span>
               </li>
               <li>
                 <strong>Por WhatsApp</strong>
-                <span>El pedido llega armado.</span>
+                  <span>Coordinás pago y entrega.</span>
               </li>
             </ul>
           </section>
@@ -1921,6 +2148,8 @@
             </div>
           </div>
 
+          <div class="promo-strip is-hidden" id="promoStrip" aria-live="polite"></div>
+
           <div class="catalog-grid" id="catalogGrid" aria-live="polite"></div>
         </section>
 
@@ -1962,10 +2191,16 @@
           </div>
           <div class="contact-actions">
             <a class="primary-button" id="contactWhatsapp" href="#" target="_blank" rel="noreferrer">
-              WhatsApp
+              Whatsapp
             </a>
             <a class="secondary-button" id="contactInstagram" href="#" target="_blank" rel="noreferrer">
-              Instagram
+              <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+                <path
+                  fill="currentColor"
+                  d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm4.2 3.35A4.65 4.65 0 1 1 7.35 12 4.65 4.65 0 0 1 12 7.35Zm0 2A2.65 2.65 0 1 0 14.65 12 2.65 2.65 0 0 0 12 9.35Zm4.95-2.55a1.15 1.15 0 1 1-1.15 1.15 1.15 1.15 0 0 1 1.15-1.15Z"
+                ></path>
+              </svg>
+              <span>Instagram</span>
             </a>
           </div>
         </div>
@@ -2113,7 +2348,7 @@
                     Volver al carrito
                   </button>
                   <button class="primary-button" id="sendOrderButton" type="submit">
-                    Enviar por WhatsApp
+                    Whatsapp
                   </button>
                 </div>
               </form>
@@ -2289,9 +2524,36 @@
   function renderContactLinks() {
     const whatsappUrl = "https://wa.me/" + STORE_CONFIG.whatsappNumber.replace(/\D/g, "");
     dom.contactWhatsapp.href = whatsappUrl;
-    dom.contactWhatsapp.textContent = "WhatsApp " + STORE_CONFIG.whatsappLabel;
+    dom.contactWhatsapp.innerHTML = renderWhatsAppButtonLabel();
     dom.contactInstagram.href = STORE_CONFIG.instagramUrl;
-    dom.contactInstagram.textContent = "Instagram " + STORE_CONFIG.instagramUser;
+    dom.contactInstagram.innerHTML = renderInstagramButtonLabel();
+    if (dom.sendOrderButton && !state.isSending) {
+      dom.sendOrderButton.innerHTML = renderWhatsAppButtonLabel();
+    }
+  }
+
+  function renderWhatsAppButtonLabel() {
+    return `
+      <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M12.04 2a9.86 9.86 0 0 0-8.52 14.82L2.2 22l5.3-1.27A9.82 9.82 0 0 0 12.04 22 10 10 0 0 0 12.04 2Zm0 18.18a8.05 8.05 0 0 1-4.1-1.12l-.29-.17-3.14.75.77-3.05-.19-.31a8.13 8.13 0 1 1 6.95 3.9Zm4.46-6.08c-.24-.12-1.44-.71-1.66-.79-.22-.08-.38-.12-.54.12-.16.24-.62.79-.76.95-.14.16-.28.18-.52.06-.24-.12-1.01-.37-1.92-1.18-.71-.63-1.19-1.42-1.33-1.66-.14-.24-.01-.37.11-.49.11-.11.24-.28.36-.42.12-.14.16-.24.24-.4.08-.16.04-.3-.02-.42-.06-.12-.54-1.3-.74-1.78-.2-.47-.4-.41-.54-.42h-.46c-.16 0-.42.06-.64.3-.22.24-.84.82-.84 2s.86 2.32.98 2.48c.12.16 1.69 2.58 4.1 3.62.57.25 1.02.39 1.37.5.58.18 1.1.16 1.51.1.46-.07 1.44-.59 1.64-1.16.2-.57.2-1.06.14-1.16-.06-.1-.22-.16-.46-.28Z"
+        ></path>
+      </svg>
+      <span>Whatsapp</span>
+    `;
+  }
+
+  function renderInstagramButtonLabel() {
+    return `
+      <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path
+          fill="currentColor"
+          d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm4.2 3.35A4.65 4.65 0 1 1 7.35 12 4.65 4.65 0 0 1 12 7.35Zm0 2A2.65 2.65 0 1 0 14.65 12 2.65 2.65 0 0 0 12 9.35Zm4.95-2.55a1.15 1.15 0 1 1-1.15 1.15 1.15 1.15 0 0 1 1.15-1.15Z"
+        ></path>
+      </svg>
+      <span>Instagram</span>
+    `;
   }
 
   function hasSheetsEndpoint() {
@@ -2302,6 +2564,7 @@
     return {
       PRODUCTOS: source.PRODUCTOS.slice(),
       PRECIOS: source.PRECIOS.slice(),
+      PROMOS: (source.PROMOS || []).slice(),
       PEDIDOS: source.PEDIDOS.slice(),
       CONFIG: (source.CONFIG || []).slice()
     };
@@ -2309,10 +2572,13 @@
 
   function normalizeSheetsSource(source) {
     const priceRows = source.PRECIOS || source.precios || [];
+    const productRows = normalizeProducts(source.PRODUCTOS || source.productos || SHEETS_SOURCE.PRODUCTOS);
+    const productRowsWithSales = applySalesStats(productRows, source.VENTAS || source.ventas || []);
 
     return {
-      PRODUCTOS: normalizeProducts(source.PRODUCTOS || source.productos || SHEETS_SOURCE.PRODUCTOS),
+      PRODUCTOS: productRowsWithSales,
       PRECIOS: normalizePriceRows(priceRows.length ? priceRows : SHEETS_SOURCE.PRECIOS),
+      PROMOS: normalizePromotions(source.PROMOS || source.promos || SHEETS_SOURCE.PROMOS),
       PEDIDOS: source.PEDIDOS || source.pedidos || [],
       CONFIG: source.CONFIG || source.config || SHEETS_SOURCE.CONFIG
     };
@@ -2338,7 +2604,8 @@
         destacado: toBoolean(row.destacado, false),
         tipoPrecio: tipoPrecio,
         precioFijo: toNumber(row.precioFijo || row.precio_fijo || row.precio || "", 0),
-        descripcion: String(row.descripcion || row.descripción || "").trim()
+        descripcion: String(row.descripcion || row.descripción || "").trim(),
+        ventas: toNumber(row.ventas || row.vendidos || row.cantidadVendida || row.totalVendido || "", 0)
       };
     }).filter(function (product) {
       return product.id && product.nombre;
@@ -2401,10 +2668,14 @@
       .trim();
   }
 
+  function normalizePriceGroup(value) {
+    return normalizeTextKey(value).replace(/\s+/g, "-");
+  }
+
   function normalizePriceRows(rows) {
     return rows.map(function (row, index) {
       return {
-        grupo: String(row.grupo || row.Grupo || "").trim(),
+        grupo: normalizePriceGroup(row.grupo || row.Grupo || ""),
         item: String(row.item || row.Item || "").trim(),
         clave: String(row.clave || row.Clave || "").trim(),
         etiqueta: String(row.etiqueta || row.Etiqueta || row.clave || "").trim(),
@@ -2417,12 +2688,59 @@
     });
   }
 
+  function normalizePromotions(rows) {
+    return rows.map(function (row, index) {
+      return {
+        id: String(row.id || row.ID || "").trim() || "promo-" + (index + 1),
+        titulo: String(row.titulo || row.Titulo || row.título || "").trim(),
+        descripcion: String(row.descripcion || row.Descripcion || row.descripción || "").trim(),
+        detalle: String(row.detalle || row.Detalle || "").trim(),
+        tipoProducto: String(row.tipoProducto || row.tipo_producto || row.tipo || "sticker").trim(),
+        tamano: String(row.tamano || row.tamaño || row.Tamano || row.Tamaño || "").trim(),
+        laminado: String(row.laminado || row.Laminado || "").trim(),
+        cantidad: Math.max(1, toNumber(row.cantidad || row.Cantidad || "", 1)),
+        precio: Math.max(0, toNumber(row.precio || row.Precio || row.valor || row.Valor || "", 0)),
+        activo: toBoolean(row.activo, true),
+        orden: toNumber(row.orden, index + 1)
+      };
+    }).filter(function (promo) {
+      return promo.precio > 0 && promo.cantidad > 0;
+    });
+  }
+
+  function applySalesStats(productRows, salesRows) {
+    const salesByProduct = {};
+    (salesRows || []).forEach(function (row) {
+      const productId = String(row.productoId || row.producto_id || row.id || row.ID || "").trim();
+      if (!productId) {
+        return;
+      }
+      salesByProduct[productId] = toNumber(row.ventas || row.vendidos || row.cantidad || row.total || "", 0);
+    });
+
+    return productRows.map(function (product) {
+      return Object.assign({}, product, {
+        ventas: salesByProduct[product.id] || product.ventas || 0
+      });
+    });
+  }
+
   function buildActiveProducts(rows) {
     return normalizeProducts(rows)
       .filter(function (product) {
         return product.activo;
       })
       .sort(sortProducts);
+  }
+
+  function buildActivePromotions(rows) {
+    return normalizePromotions(rows)
+      .filter(function (promo) {
+        return promo.activo;
+      })
+      .sort(function (a, b) {
+        return a.orden - b.orden;
+      });
   }
 
   function applyRemoteConfig(configRows) {
@@ -2515,11 +2833,36 @@
     localStorage.setItem(key, JSON.stringify(value));
   }
 
+  function consumePendingFavoritesFilter(routeName) {
+    if (routeName !== "stickers") {
+      return false;
+    }
+
+    try {
+      const pendingValue = sessionStorage.getItem(STORAGE_KEYS.pendingFavorites);
+      sessionStorage.removeItem(STORAGE_KEYS.pendingFavorites);
+      return pendingValue === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function rememberPendingFavoritesFilter(value) {
+    try {
+      sessionStorage.setItem(STORAGE_KEYS.pendingFavorites, value ? "1" : "0");
+    } catch (error) {
+      return;
+    }
+  }
+
   function uniqueValues(values) {
     return Array.from(new Set(values));
   }
 
   function sortProducts(a, b) {
+    if ((a.ventas || 0) !== (b.ventas || 0)) {
+      return (b.ventas || 0) - (a.ventas || 0);
+    }
     if (a.destacado !== b.destacado) {
       return Number(b.destacado) - Number(a.destacado);
     }

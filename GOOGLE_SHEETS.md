@@ -5,7 +5,8 @@ La web pública solo lee productos y registra pedidos. La carga de productos que
 ## Hojas
 
 - `PRODUCTOS`: catálogo visible en la web.
-- `PRECIOS`: precios base, tamaños, laminados y precios fijos.
+- `PRECIOS`: precios base, combinaciones de stickers y precios fijos generales.
+- `PROMOS`: promociones activas que se muestran en la web y se aplican al carrito.
 - `PEDIDOS`: una fila por producto comprado.
 - `CONFIG`: WhatsApp e Instagram visibles en la web.
 
@@ -35,6 +36,35 @@ La columna `categoria` queda libre para ordenar diseños, por ejemplo `Musica`, 
 
 Las páginas de personalizados, imanes y extras son fichas informativas fijas desde el código. No se llenan con productos del Sheet.
 
+## Precios Y Promos
+
+La hoja `PRECIOS` ya queda preparada con filas editables. Las más importantes para stickers son las de `item=combo`, porque definen el precio final de cada combinación:
+
+`3x3-no`: Chico sin laminado.
+`3x3-si`: Chico laminado.
+`5x5-no`: Mediano sin laminado.
+`5x5-si`: Mediano laminado.
+`7x7-no`: Grande sin laminado.
+`7x7-si`: Grande laminado.
+
+También quedan filas generales para `imanes`, `senaladores`, `encendedores`, `tarjetas`, `personalizados` y `extras`. Para cambiar todos los productos de una familia, editá el valor de esa fila.
+
+La hoja `PROMOS` maneja promos como `3 stickers medianos sin laminar`. Si cambiás el campo `precio`, el cartel de la web y el descuento del carrito se actualizan al volver a cargar la página.
+
+Para la promo 3x1000:
+
+`tipoProducto=sticker`
+`tamano=5x5`
+`laminado=no`
+`cantidad=3`
+`precio=1000`
+
+La promo se aplica mezclando stickers distintos mientras coincidan tamaño y laminado.
+
+## Más Vendidos
+
+La web no publica la hoja `PEDIDOS` completa para no exponer datos de clientes. El Apps Script calcula un resumen de ventas por producto y devuelve solo cantidades agregadas. Con eso, la vidriera de inicio y el orden destacado priorizan los productos más vendidos.
+
 ## Carga Masiva De Imágenes
 
 1. Subir todas las imágenes a la carpeta de Drive indicada en `IMAGE_FOLDER_ID`.
@@ -55,7 +85,7 @@ Si ya tenés links viejos de Drive en `imagen1` o `imagen2`, la web también int
 
 ## Rendimiento Con Muchos Stickers
 
-La web muestra los productos por tandas de 24 y carga imágenes de forma diferida, así no intenta dibujar 1000 stickers de una sola vez.
+La web muestra los productos por tandas de 48 y carga imágenes de forma diferida, así no intenta dibujar 1000 stickers de una sola vez.
 
 Si el catálogo supera varios miles de productos, la mejor alternativa es cambiar Apps Script a paginación desde servidor: que el Sheet devuelva solo la página actual, por ejemplo 24 o 48 productos por pedido, junto con los filtros necesarios.
 

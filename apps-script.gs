@@ -24,6 +24,19 @@ const SHEET_HEADERS = {
     "valor",
     "orden"
   ],
+  PROMOS: [
+    "id",
+    "titulo",
+    "descripcion",
+    "detalle",
+    "tipoProducto",
+    "tamano",
+    "laminado",
+    "cantidad",
+    "precio",
+    "activo",
+    "orden"
+  ],
   PEDIDOS: [
     "pedidoId",
     "fecha",
@@ -40,7 +53,9 @@ const SHEET_HEADERS = {
     "precioUnitario",
     "subtotal",
     "totalPedido",
-    "estado"
+    "estado",
+    "promociones",
+    "descuentoPedido"
   ],
   CONFIG: [
     "clave",
@@ -65,6 +80,8 @@ function setupSheets() {
   });
 
   seedConfig_();
+  seedPrices_();
+  seedPromos_();
 }
 
 function doGet(event) {
@@ -79,6 +96,8 @@ function doGet(event) {
     data: {
       PRODUCTOS: readSheet_("PRODUCTOS"),
       PRECIOS: readSheet_("PRECIOS"),
+      PROMOS: readSheet_("PROMOS"),
+      VENTAS: buildSalesSummary_(),
       CONFIG: readSheet_("CONFIG")
     }
   });
@@ -295,6 +314,95 @@ function seedConfig_() {
     ["instagramUser", "@waxistickerslanus"],
     ["instagramUrl", "https://www.instagram.com/waxistickerslanus/"]
   ]);
+}
+
+function seedPrices_() {
+  const sheet = getOrCreateSheet_("PRECIOS");
+  const values = sheet.getDataRange().getValues();
+  const existingKeys = {};
+  const defaultRows = [
+    ["sticker", "base", "general", "Base", "Precio base de stickers", 250, 1],
+    ["sticker", "tamano", "3x3", "Chico", "3 x 3 cm", 0, 1],
+    ["sticker", "tamano", "5x5", "Mediano", "5 x 5 cm", 900, 2],
+    ["sticker", "tamano", "7x7", "Grande", "7 x 7 cm", 1800, 3],
+    ["sticker", "laminado", "no", "No Laminado", "Terminación estándar", 0, 1],
+    ["sticker", "laminado", "si", "Laminado", "Protección extra", 450, 2],
+    ["sticker", "combo", "3x3-no", "Chico sin laminado", "3 x 3 cm, no laminado", 250, 1],
+    ["sticker", "combo", "3x3-si", "Chico laminado", "3 x 3 cm, laminado", 700, 2],
+    ["sticker", "combo", "5x5-no", "Mediano sin laminado", "5 x 5 cm, no laminado", 1150, 3],
+    ["sticker", "combo", "5x5-si", "Mediano laminado", "5 x 5 cm, laminado", 1600, 4],
+    ["sticker", "combo", "7x7-no", "Grande sin laminado", "7 x 7 cm, no laminado", 2050, 5],
+    ["sticker", "combo", "7x7-si", "Grande laminado", "7 x 7 cm, laminado", 2500, 6],
+    ["imanes", "base", "unico", "Imanes", "Precio general de imanes", 3600, 10],
+    ["senaladores", "base", "unico", "Señaladores", "Precio general de señaladores", 0, 11],
+    ["encendedores", "base", "unico", "Encendedores", "Precio general de encendedores", 0, 12],
+    ["tarjetas", "base", "unico", "Tarjetas", "Precio general de tarjetas", 2100, 13],
+    ["personalizados", "base", "unico", "Personalizados", "Precio general de personalizados", 0, 14],
+    ["extras", "base", "unico", "Extras", "Precio general de extras", 0, 15],
+    ["iman-polaroid", "base", "unico", "Tamaño único", "Producto fijo de ejemplo", 3600, 20],
+    ["tarjeta-mini-thanks", "base", "unico", "Paquete base", "Producto fijo de ejemplo", 2100, 21],
+    ["otros", "base", "unico", "Otros productos", "Precio general de otros productos", 0, 22]
+  ];
+
+  values.slice(1).forEach(function (row) {
+    existingKeys[[row[0], row[1], row[2]].join("|")] = true;
+  });
+
+  const missingRows = defaultRows.filter(function (row) {
+    return !existingKeys[[row[0], row[1], row[2]].join("|")];
+  });
+
+  if (missingRows.length) {
+    sheet.getRange(sheet.getLastRow() + 1, 1, missingRows.length, SHEET_HEADERS.PRECIOS.length).setValues(missingRows);
+  }
+}
+
+function seedPromos_() {
+  const sheet = getOrCreateSheet_("PROMOS");
+  const values = sheet.getDataRange().getValues();
+  const promoId = "promo-mediano-sin-laminar";
+  const alreadyExists = values.slice(1).some(function (row) {
+    return row[0] === promoId;
+  });
+
+  if (alreadyExists) {
+    return;
+  }
+
+  sheet.getRange(sheet.getLastRow() + 1, 1, 1, SHEET_HEADERS.PROMOS.length).setValues([[
+    "promo-mediano-sin-laminar",
+    "Promo mediano sin laminar",
+    "3 stickers medianos sin laminar",
+    "Podés combinar diseños medianos no laminados y el total se ajusta solo en el carrito.",
+    "sticker",
+    "5x5",
+    "no",
+    3,
+    1000,
+    true,
+    1
+  ]]);
+}
+
+function buildSalesSummary_() {
+  const rows = readSheet_("PEDIDOS");
+  const salesByProduct = {};
+
+  rows.forEach(function (row) {
+    const productId = String(row.productoId || "").trim();
+    if (!productId) {
+      return;
+    }
+
+    salesByProduct[productId] = (salesByProduct[productId] || 0) + Number(row.cantidad || 0);
+  });
+
+  return Object.keys(salesByProduct).map(function (productId) {
+    return {
+      productoId: productId,
+      ventas: salesByProduct[productId]
+    };
+  });
 }
 
 function json_(payload) {

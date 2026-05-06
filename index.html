@@ -24,14 +24,14 @@
           width="3240"
           height="1350"
           fetchpriority="high"
-          style="display:block;width:100%;height:clamp(8rem,28vw,11rem);object-fit:contain;object-position:center;"
+          style="display:block;width:100%;height:100%;"
         >
       </a>
     </div>
 
     <div class="hero__topbar shell">
       <button class="ghost-button topbar-favorites" id="topbarFavoritesButton" type="button" aria-pressed="false">
-        Ver favoritos
+        Guardados
       </button>
 
       <nav class="site-nav" aria-label="Navegación principal">
@@ -52,16 +52,16 @@
 
     <div class="hero__content shell">
       <section class="hero__copy">
-        <p class="eyebrow">Tienda por WhatsApp</p>
+        <p class="eyebrow">Catálogo por WhatsApp</p>
         <h1>WAXI STICKERS LANÚS</h1>
-        <p class="hero__headline">Elegí tus stickers y armá el pedido.</p>
+        <p class="hero__headline">Elegí diseño, tamaño y laminado. El pedido se arma y se envía por Whatsapp.</p>
         <p class="hero__text">
-          Catálogo listo para pedir por WhatsApp, sin pago online.
+          Catálogo visual, promos activas, guardados y carrito para armar tu pedido en minutos.
         </p>
 
         <div class="hero__actions">
           <button class="primary-button" type="button" data-route-button="stickers">
-            Comprar stickers
+            Ver stickers
           </button>
           <button class="secondary-button" type="button" id="heroCartButtonSecondary">
             Ver carrito
@@ -70,17 +70,17 @@
 
         <div class="hero__shop-actions" aria-label="Accesos rápidos">
           <button class="hero-category hero-category--main" type="button" data-route-button="stickers">
-            <span>Comprar ahora</span>
+            <span>Catálogo</span>
             <strong>Stickers</strong>
-            <small>Ver catálogo completo</small>
+            <small>Diseños listos para elegir</small>
           </button>
           <button class="hero-category" type="button" data-route-button="personalizados">
-            <span>A pedido</span>
+            <span>A medida</span>
             <strong>Personalizados</strong>
-            <small>Fotos, logos e ideas</small>
+            <small>Fotos, logos e ideas propias</small>
           </button>
           <button class="hero-category" type="button" data-route-button="imanes">
-            <span>También</span>
+            <span>Negocios</span>
             <strong>Imanes</strong>
             <small>Regalos y delivery</small>
           </button>
@@ -92,12 +92,12 @@
             <span>Precio base sticker chico.</span>
           </li>
           <li>
-            <strong>3 tamaños</strong>
-            <span>Chico, mediano y grande.</span>
+            <strong>Promo activa</strong>
+            <span>3 medianos sin laminar.</span>
           </li>
           <li>
             <strong>Por WhatsApp</strong>
-            <span>Coordinas el pago y la entrega.</span>
+            <span>Coordinás pago y entrega.</span>
           </li>
         </ul>
       </section>
@@ -167,6 +167,8 @@
         </div>
       </div>
 
+      <div class="promo-strip is-hidden" id="promoStrip" aria-live="polite"></div>
+
       <div class="catalog-grid" id="catalogGrid" aria-live="polite"></div>
     </section>
 
@@ -208,10 +210,16 @@
       </div>
       <div class="contact-actions">
         <a class="primary-button" id="contactWhatsapp" href="#" target="_blank" rel="noreferrer">
-          WhatsApp
+          Whatsapp
         </a>
         <a class="secondary-button" id="contactInstagram" href="#" target="_blank" rel="noreferrer">
-          Instagram
+          <svg class="button-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path
+              fill="currentColor"
+              d="M7.8 2h8.4A5.8 5.8 0 0 1 22 7.8v8.4a5.8 5.8 0 0 1-5.8 5.8H7.8A5.8 5.8 0 0 1 2 16.2V7.8A5.8 5.8 0 0 1 7.8 2Zm0 2A3.8 3.8 0 0 0 4 7.8v8.4A3.8 3.8 0 0 0 7.8 20h8.4a3.8 3.8 0 0 0 3.8-3.8V7.8A3.8 3.8 0 0 0 16.2 4H7.8Zm4.2 3.35A4.65 4.65 0 1 1 7.35 12 4.65 4.65 0 0 1 12 7.35Zm0 2A2.65 2.65 0 1 0 14.65 12 2.65 2.65 0 0 0 12 9.35Zm4.95-2.55a1.15 1.15 0 1 1-1.15 1.15 1.15 1.15 0 0 1 1.15-1.15Z"
+            ></path>
+          </svg>
+          <span>Instagram</span>
         </a>
       </div>
     </div>
@@ -359,7 +367,7 @@
                 Volver al carrito
               </button>
               <button class="primary-button" id="sendOrderButton" type="submit">
-                Enviar por WhatsApp
+                Whatsapp
               </button>
             </div>
           </form>
